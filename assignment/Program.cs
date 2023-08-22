@@ -20,30 +20,33 @@ internal class Program
 
     static void DisplayGameIntro()
     {
-        Console.Clear();
-
-        Console.WriteLine("스파르타 마을에 오신 여러분 환영합니다.");
-        Console.WriteLine("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.");
-        Console.WriteLine();
-        Console.WriteLine("0. 게임종료");
-        Console.WriteLine("1. 상태보기");
-        Console.WriteLine("2. 인벤토리");
-        Console.WriteLine();
-        Console.WriteLine("원하시는 행동을 입력해주세요.");
-
-        int input = CheckValidInput(0, 2);
-        switch (input)
+        while (true)
         {
-            case 0:
-                break;
+            Console.Clear();
 
-            case 1:
-                DisplayMyInfo();
-                break;
+            Console.WriteLine("스파르타 마을에 오신 여러분 환영합니다.");
+            Console.WriteLine("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.");
+            Console.WriteLine();
+            Console.WriteLine("0. 게임종료");
+            Console.WriteLine("1. 상태보기");
+            Console.WriteLine("2. 인벤토리");
+            Console.WriteLine();
+            Console.WriteLine("원하시는 행동을 입력해주세요.");
 
-            case 2:
-                DisplayInventory();
-                break;
+            int input = CheckValidInput(0, 2);
+            switch (input)
+            {
+                case 0:
+                    return;
+
+                case 1:
+                    DisplayMyInfo();
+                    break;
+
+                case 2:
+                    DisplayInventory();
+                    break;
+            }
         }
     }
 
@@ -56,8 +59,12 @@ internal class Program
         Console.WriteLine();
         Console.WriteLine($"Lv.{player.Level}");
         Console.WriteLine($"{player.Name}({player.Job})");
-        Console.WriteLine($"공격력 :{player.Atk}");
-        Console.WriteLine($"방어력 : {player.Def}");
+        Console.WriteLine($"공격력 : {player.Atk} " +
+            "{0}",player.addAtk == 0 ? null : ("("+(Math.Sign(player.addAtk) == 1 ? "+" : "-") + player.addAtk+")")
+            );
+        Console.WriteLine($"방어력 : {player.Def} " +
+            "{0}", player.addDef == 0 ? null : ("(" + (Math.Sign(player.addDef) == 1 ? "+" : "-") + player.addDef + ")")
+            );
         Console.WriteLine($"체력 : {player.Hp}");
         Console.WriteLine($"Gold : {player.Gold} G");
         Console.WriteLine();
@@ -67,41 +74,30 @@ internal class Program
         switch (input)
         {
             case 0:
-                DisplayGameIntro();
-                break;
+                return;
         }
     }
 
     static void DisplayInventory()
     {
-        Console.Clear();
-
-        Console.WriteLine("인벤토리");
-        Console.WriteLine("보유 중인 아이템을 관리할 수 있습니다.\n");
-        Console.WriteLine("[아이템 목록]");
-        for (int i = 0; i < player.Inventory.Count(); i++)
+        while (true)
         {
-            Console.WriteLine("- {0}{1}| {2}{3}{4} | {5}", 
-                null,
-                player.Inventory[i].Name.PadRight(10),
-                player.Inventory[i].Atk == 0 ? null : "공격력 " + (Math.Sign(player.Inventory[i].Atk) == 1 ? "+" : "-") + player.Inventory[i].Atk,
-                player.Inventory[i].Def == 0 ? null : "방어력 "+(Math.Sign(player.Inventory[i].Def) == 1 ? "+" : "-") + player.Inventory[i].Def,
-                player.Inventory[i].Hp == 0 ? null : "체력 회복 " + (Math.Sign(player.Inventory[i].Hp) == 1 ? "+" : "-") + player.Inventory[i].Hp,
-                player.Inventory[i].Explanation
-                );
-        }
-        Console.WriteLine("\n0. 나가기\n1. 장착 관리\n");
-        Console.WriteLine("원하시는 행동을 입력해주세요.");
+            Console.Clear();
 
-        int input = CheckValidInput(0, 1);
-        switch (input)
-        {
-            case 0:
-                DisplayGameIntro();
-                break;
-            case 1:
-                //DisplayGameIntro(); 장착관리 출력화면으로
-                break;
+            Console.WriteLine("인벤토리");
+            DisplayItemList(0);
+            Console.WriteLine("\n0. 나가기\n1. 장착 관리\n");
+            Console.WriteLine("원하시는 행동을 입력해주세요.");
+
+            int input = CheckValidInput(0, 1);
+            switch (input)
+            {
+                case 0:
+                    return;
+                case 1:
+                    DisplayItemUsing();
+                    break;
+            }
         }
     }
     /// <summary>
@@ -126,19 +122,61 @@ internal class Program
             Console.WriteLine("잘못된 입력입니다.");
         }
     }
+    static void DisplayItemList(int select)
+    {
+        Console.WriteLine("보유 중인 아이템을 관리할 수 있습니다.\n");
+        Console.WriteLine("[아이템 목록]");
+        for (int i = 0; i < player.inventory.Count(); i++)
+        {
+            Console.WriteLine("- {0}{1}{2}".PadRight(18)+"\t| {3}{4}{5}".PadRight(8) + "\t| {6}",
+                select == 1 ? i + 1 + " " : null,
+                player.inventory[i].Using == true ? "[E]" : null,
+                player.inventory[i].Name,
+                player.inventory[i].Atk == 0 ? null : "공격력 " + (Math.Sign(player.inventory[i].Atk) == 1 ? "+" : "-") + player.inventory[i].Atk,
+                player.inventory[i].Def == 0 ? null : "방어력 " + (Math.Sign(player.inventory[i].Def) == 1 ? "+" : "-") + player.inventory[i].Def,
+                player.inventory[i].Hp == 0 ? null : "체력 회복 " + (Math.Sign(player.inventory[i].Hp) == 1 ? "+" : "-") + player.inventory[i].Hp,
+                player.inventory[i].Explanation
+                );
+        }
+    }
+    static void DisplayItemUsing()
+    {
+        while(true)
+        {
+            Console.Clear();
+
+            Console.WriteLine("인벤토리 - 장착 관리");
+            DisplayItemList(1);
+            Console.WriteLine("\n0. 나가기\n");
+            Console.WriteLine("원하시는 행동을 입력해주세요.");
+
+            int input = CheckValidInput(0, player.inventory.Count());
+            switch (input)
+            {
+                case 0:
+                    return;
+                default:
+                    player.IsUsing(input-1);
+                    break;
+            }
+        }
+    }
 }
 
 
 public class Character
 {
-    public string Name { get; }
-    public string Job { get; }
-    public int Level { get; }
-    public int Atk { get; }
-    public int Def { get; }
-    public int Hp { get; }
-    public int Gold { get; }
-    public List<Item> Inventory { get; }
+    public string Name { get; private set; }
+    public string Job { get; private set; }
+    public int Level { get; private set; }
+    public int Atk { get; private set; }
+    public int Def { get; private set; }
+    public int Hp { get; private set; }
+    public int Gold { get; private set; }
+    public List<Item> inventory { get; }
+    public List<Item> usingItem { get; }
+    public int addAtk { get; private set; }
+    public int addDef { get; private set; }
 
     public Character(string name, string job, int level, int atk, int def, int hp, int gold)
     {
@@ -151,11 +189,41 @@ public class Character
         Gold = gold;
         Armor defaultArmor = new Armor(ItemType.Armor,"무쇠갑옷",5,"무쇠로 만들어져 튼튼한 갑옷입니다.");
         Weapon defaultWeapon = new Weapon(ItemType.Weapon,"낡은 검",2,"쉽게 볼 수 있는 낡은 검입니다.");
-        Inventory = new List<Item>();
-        Inventory.Add(defaultArmor);
-        Inventory.Add(defaultWeapon);
+        inventory = new List<Item>();
+        inventory.Add(defaultArmor);
+        inventory.Add(defaultWeapon);
+        usingItem = new List<Item>();
     }
-    
+    public void IsUsing(int ItemIndex)
+    {
+        bool nowUsing = !inventory[ItemIndex].Using;
+        if (nowUsing)
+        {
+            if (inventory[ItemIndex].Type != ItemType.Potion)
+            {
+                inventory[ItemIndex].Using = nowUsing;
+                usingItem.Add(inventory[ItemIndex]);
+                addAtk += inventory[ItemIndex].Atk;
+                addDef += inventory[ItemIndex].Def;
+                Atk += inventory[ItemIndex].Atk;
+                Def += inventory[ItemIndex].Def;
+            }
+            else
+            {
+                //포션 먹는 메서드 구현하여 적을것
+            }
+        }
+        else
+        {
+            inventory[ItemIndex].Using = nowUsing;
+            usingItem.Remove(inventory[ItemIndex]);
+            addAtk -= inventory[ItemIndex].Atk;
+            addDef -= inventory[ItemIndex].Def;
+            Atk -= inventory[ItemIndex].Atk;
+            Def -= inventory[ItemIndex].Def;
+        }
+        
+    }
 }
 public enum ItemType
 {
@@ -175,22 +243,23 @@ public enum ItemType
 }
 public interface Item
 {
-    ItemType Type { get; set; }
-    string Name { get; set; }
-    int Atk { get; set; }
-    int Def { get; set; }
-    int Hp { get; set; }
-    string Explanation { get; set; }
+    ItemType Type { get; }
+    string Name { get; }
+    int Atk { get; }
+    int Def { get; }
+    int Hp { get; }
+    string Explanation { get; }
+    bool Using { get; set; }
 }
 class Weapon : Item
 {
-    public ItemType Type { get; set; }
-    public string Name { get; set; }
-    public int Atk { get; set; }
-    public int Def { get; set; }
-    public int Hp { get; set; }
-    public string Explanation { get; set; }
-
+    public ItemType Type { get; }
+    public string Name { get; }
+    public int Atk { get; }
+    public int Def { get; }
+    public int Hp { get; }
+    public string Explanation { get; }
+    public bool Using { get; set; }
     public Weapon(ItemType type, string name, int atk, int def, int hp, string explanation)
     {
         Type = type;
@@ -225,6 +294,7 @@ class Armor : Item
     public int Def { get; set; }
     public int Hp { get; set; }
     public string Explanation { get; set; }
+    public bool Using { get; set; }
 
     public Armor(ItemType type, string name, int atk, int def, int hp, string explanation)
     {
@@ -251,7 +321,7 @@ class Armor : Item
         Explanation = explanation;
     }
 }
-class Potion
+class Potion : Item
 {
     public ItemType Type { get; set; }
     public string Name { get; set; }
@@ -259,6 +329,7 @@ class Potion
     public int Def { get; set; }
     public int Hp { get; set; }
     public string Explanation { get; set; }
+    public bool Using { get; set; }
 
     public Potion(ItemType type, string name, int atk, int def, int hp, string explanation)
     {
