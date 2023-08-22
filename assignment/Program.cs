@@ -3,6 +3,15 @@
 internal class Program
 {
     private static Character player;
+    private static List<Item> storage;
+
+    public enum ItemIndexNumber
+    {
+        defaultArmor,
+        defaultWeapon,
+        workGlovesr,
+        jeans
+    }
 
     static void Main(string[] args)
     {
@@ -16,6 +25,20 @@ internal class Program
         player = new Character("Chad", "전사", 1, 10, 5, 100, 1500);
 
         // 아이템 정보 세팅
+        storage = new List<Item>();
+        Armor defaultArmor = new Armor(ItemType.Armor, "무쇠갑옷", 5, "무쇠로 만들어져 튼튼한 갑옷입니다.");
+        Weapon defaultWeapon = new Weapon(ItemType.Weapon, "낡은 검", 2, "쉽게 볼 수 있는 낡은 검입니다.");
+        Armor workGlovesr = new Armor(ItemType.Hand_Armor, "노가다장갑", 1, "무 코팅의 흰색 장갑입니다.");
+        Armor jeans = new Armor(ItemType.Bottom_Armor, "청바지", 1, "일반 청바지입니다.");
+        storage.Add(defaultArmor);
+        storage.Add(defaultWeapon);
+        storage.Add(workGlovesr);
+        storage.Add(jeans);
+
+        player.PickUpItem(storage[(int)ItemIndexNumber.defaultArmor]);
+        player.PickUpItem(storage[(int)ItemIndexNumber.defaultWeapon]);
+        player.PickUpItem(storage[(int)ItemIndexNumber.workGlovesr]);
+        player.PickUpItem(storage[(int)ItemIndexNumber.jeans]);
     }
 
     static void DisplayGameIntro()
@@ -128,7 +151,18 @@ internal class Program
         Console.WriteLine("[아이템 목록]");
         for (int i = 0; i < player.inventory.Count(); i++)
         {
-            Console.WriteLine("- {0}{1}{2}".PadRight(18)+"\t| {3}{4}{5}".PadRight(8) + "\t| {6}",
+            int nameBlankLeft = 20;
+            int effectBlankLeft = 20;
+            int effectBlankRight;
+
+            nameBlankLeft -= select == 1 ? 2 : 0;
+            nameBlankLeft -= player.inventory[i].Using == true ? 3 : 0;
+            nameBlankLeft -= (player.inventory[i].Name.Length + isCountHangul(player.inventory[i].Name));
+
+            effectBlankLeft -= (player.inventory[i].Atk == 0 ? (player.inventory[i].Def == 0 ? ((int)Math.Log10(player.inventory[i].Hp) + 10) : (int)Math.Log10(player.inventory[i].Def) + 7) : (int)Math.Log10(player.inventory[i].Atk)+7);
+            effectBlankRight = (effectBlankLeft + 1) /2;
+            effectBlankLeft = effectBlankLeft / 2;
+            Console.WriteLine("- "+ "{0}{1}{2}".PadRight(nameBlankLeft + 9) + "|".PadRight(effectBlankLeft+1) + "{3}{4}{5}".PadRight(effectBlankRight+9) + "| {6}",
                 select == 1 ? i + 1 + " " : null,
                 player.inventory[i].Using == true ? "[E]" : null,
                 player.inventory[i].Name,
@@ -161,6 +195,21 @@ internal class Program
             }
         }
     }
+    public static int isCountHangul(string str)
+    {
+        int count = 0;
+        char[] charArr = str.ToCharArray();
+        foreach (char c in charArr)
+        {
+
+            if (char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.OtherLetter)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
 }
 
 
@@ -187,11 +236,7 @@ public class Character
         Def = def;
         Hp = hp;
         Gold = gold;
-        Armor defaultArmor = new Armor(ItemType.Armor,"무쇠갑옷",5,"무쇠로 만들어져 튼튼한 갑옷입니다.");
-        Weapon defaultWeapon = new Weapon(ItemType.Weapon,"낡은 검",2,"쉽게 볼 수 있는 낡은 검입니다.");
         inventory = new List<Item>();
-        inventory.Add(defaultArmor);
-        inventory.Add(defaultWeapon);
         usingItem = new List<Item>();
     }
     public void IsUsing(int ItemIndex)
@@ -222,7 +267,10 @@ public class Character
             Atk -= inventory[ItemIndex].Atk;
             Def -= inventory[ItemIndex].Def;
         }
-        
+    }
+    public void PickUpItem(Item pickUpItem)
+    {
+        inventory.Add(pickUpItem);
     }
 }
 public enum ItemType
@@ -253,12 +301,12 @@ public interface Item
 }
 class Weapon : Item
 {
-    public ItemType Type { get; }
-    public string Name { get; }
-    public int Atk { get; }
-    public int Def { get; }
-    public int Hp { get; }
-    public string Explanation { get; }
+    public ItemType Type { get; set; }
+    public string Name { get; set; }
+    public int Atk { get; set; }
+    public int Def { get; set; }
+    public int Hp { get; set; }
+    public string Explanation { get; set; }
     public bool Using { get; set; }
     public Weapon(ItemType type, string name, int atk, int def, int hp, string explanation)
     {
