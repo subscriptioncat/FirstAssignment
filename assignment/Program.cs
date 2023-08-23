@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Security.Cryptography;
 
 internal class Program
@@ -11,9 +12,16 @@ internal class Program
         defaultArmor,
         defaultWeapon,
         workGlovesr,
-        jeans
+        jeans, //3 까지는 디폴드
+        nobiceArmor,
+        castIronArmor,
+        spartanArmor,
+        oldSword,
+        bronzeAX,
+        spartanLance
     }
-    //0 인트로, 1 상태창, 2 인벤토리,  3 장착 관리, 4 아이템 정렬, -1 정렬에서 내림차순 오름차순 선택
+    // -1 정렬에서 내림차순 오름차순 선택, 0 인트로, 1 상태창, 2 인벤토리,  3 장착 관리, 4 아이템 정렬, 5 상점
+    // 6 아이템 구매, 7 아이템 판매
     public enum SelectMenuNumber
     {
         ASCorDESC = -1,
@@ -21,7 +29,10 @@ internal class Program
         Status,
         Inventory,
         Equip,
-        Arrange
+        Arrange,
+        Shop,
+        BuyItem,
+        SaleItem
     }
     static void Main(string[] args)
     {
@@ -36,14 +47,27 @@ internal class Program
 
         // 아이템 정보 세팅
         storage = new List<Item>();
-        Armor defaultArmor = new Armor(ItemType.Armor, "무쇠갑옷", 5, "무쇠로 만들어져 튼튼한 갑옷입니다.");
-        Weapon defaultWeapon = new Weapon(ItemType.Weapon, "낡은 검", 2, "쉽게 볼 수 있는 낡은 검입니다.");
-        Armor workGlovesr = new Armor(ItemType.Hand_Armor, "노가다장갑", 1, "무 코팅의 흰색 장갑입니다.");
-        Armor jeans = new Armor(ItemType.Bottom_Armor, "청바지", 1, "일반 청바지입니다.");
+        Armor defaultArmor = new Armor(ItemType.Armor, "무쇠갑옷", 5, "무쇠로 만들어져 튼튼한 갑옷입니다.",1000);
+        Weapon defaultWeapon = new Weapon(ItemType.Weapon, "낡은 검", 2, "쉽게 볼 수 있는 낡은 검입니다.", 600);
+        Armor workGlovesr = new Armor(ItemType.Hand_Armor, "노가다장갑", 1, "무 코팅의 흰색 장갑입니다.", 200);
+        Armor jeans = new Armor(ItemType.Bottom_Armor, "청바지", 1, "일반 청바지입니다.", 200);
+        Armor nobiceArmor = new Armor(ItemType.Tops_Armor, "수련자 갑옷", 5,"수련에 도움을 주는 갑옷입니다.", 1000);
+        Armor castIronArmor = new Armor(ItemType.Armor, "무쇠갑옷", 9, "무쇠로 만들어져 튼튼한 갑옷입니다.", 2000);
+        Armor spartanArmor = new Armor(ItemType.Tops_Armor, "스파르타의 갑옷", 15, "스파르타의 전사들이 사용했다는 전설의 갑옷", 3500);
+        Weapon oldSword = new Weapon(ItemType.Weapon, "낡은 검", 2, "쉽게 볼 수 있는 낡은 검입니다.", 600);
+        Weapon bronzeAX = new Weapon(ItemType.Weapon,"청동 도끼",5,"어디선가 사용됐던거 같은 도끼입니다.", 1500);
+        Weapon spartanLance = new Weapon(ItemType.Weapon,"스파르타의 창",7,"스파르타의 전사들이 사용했다는 전설의 창입니다.", 2500);
         storage.Add(defaultArmor);
         storage.Add(defaultWeapon);
         storage.Add(workGlovesr);
         storage.Add(jeans);
+        storage.Add(nobiceArmor);
+        storage.Add(castIronArmor);
+        storage.Add(spartanArmor);
+        storage.Add(oldSword);
+        storage.Add(bronzeAX);
+        storage.Add(spartanLance);
+
 
         player.PickUpItem(storage[(int)ItemIndexNumber.defaultArmor]);
         player.PickUpItem(storage[(int)ItemIndexNumber.defaultWeapon]);
@@ -59,20 +83,27 @@ internal class Program
 
             Console.WriteLine("스파르타 마을에 오신 여러분 환영합니다.");
             Console.WriteLine("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.");
-            DisplayInventorySelectMenu(SelectMenuNumber.Intro);
+            DisplaySelectMenu(SelectMenuNumber.Intro);
 
-            int input = CheckValidInput(0, 2);
+            int input = CheckValidInput(0, 3);
             switch (input)
             {
                 case 0:
                     return;
-
                 case 1:
                     DisplayMyInfo();
                     break;
-
                 case 2:
                     DisplayInventory();
+                    break;
+                case 3:
+                    DisplayShop(new int[] { (int)ItemIndexNumber.nobiceArmor,
+                        (int)ItemIndexNumber.castIronArmor,
+                        (int)ItemIndexNumber.spartanArmor,
+                        (int)ItemIndexNumber.oldSword,
+                        (int)ItemIndexNumber.bronzeAX,
+                        (int)ItemIndexNumber.spartanLance
+                    });
                     break;
             }
         }
@@ -84,7 +115,7 @@ internal class Program
 
         Console.WriteLine("상태보기");
         Console.WriteLine("캐릭터의 정보르 표시합니다.");
-        DisplayInventorySelectMenu(SelectMenuNumber.Status);
+        DisplaySelectMenu(SelectMenuNumber.Status);
 
         int input = CheckValidInput(0, 0);
         switch (input)
@@ -101,7 +132,7 @@ internal class Program
             Console.Clear();
 
             DisplayItemList(SelectMenuNumber.Inventory);
-            DisplayInventorySelectMenu(SelectMenuNumber.Inventory);
+            DisplaySelectMenu(SelectMenuNumber.Inventory);
 
             int input = CheckValidInput(0, 2);
             switch (input)
@@ -135,21 +166,31 @@ internal class Program
                 if (ret >= min && ret <= max)
                     return ret;
             }
-
             Console.WriteLine("잘못된 입력입니다.");
         }
     }
     static void DisplayItemList(SelectMenuNumber select)
     {
         string selectedMenu = "";
+        Console.Clear();
 
-        if(select == SelectMenuNumber.Equip)
+        if (select == SelectMenuNumber.Equip)
             selectedMenu = " - 장착 관리";
-        else if(select == SelectMenuNumber.Arrange)
+        else if (select == SelectMenuNumber.Arrange)
             selectedMenu = " - 아이템 정렬";
-
-        Console.WriteLine("인벤토리{0}", selectedMenu);
-        Console.WriteLine("보유 중인 아이템을 관리할 수 있습니다.\n");
+        else
+            selectedMenu = " - 아이템 판매";
+        if ((int)select <= (int)SelectMenuNumber.Arrange)
+        {
+            Console.WriteLine("인벤토리{0}", selectedMenu);
+            Console.WriteLine("보유 중인 아이템을 관리할 수 있습니다.\n");
+        }
+        else
+        {
+            Console.WriteLine("상점{0}\n필요한 아이템을 얻을 수 있는 상점입니다.\n", selectedMenu);
+            Console.WriteLine("[보유 골드]");
+            Console.WriteLine($"Gold : {player.Gold} G\n");
+        }
         Console.WriteLine("[아이템 목록]");
         for (int i = 0; i < player.inventory.Count(); i++)
         {
@@ -166,7 +207,7 @@ internal class Program
             effectBlankLeft = effectBlankLeft / 2;
 
             Console.WriteLine("- "+ "{0}{1}{2}".PadRight(nameBlankLeft + 9) + "|".PadRight(effectBlankLeft+1) + "{3}{4}{5}".PadRight(effectBlankRight+9) + "| {6}",
-                select == SelectMenuNumber.Equip ? i + 1 + " " : null,
+                (select == SelectMenuNumber.Equip) || (select == SelectMenuNumber.SaleItem) ? i + 1 + " " : null,
                 player.inventory[i].Using == true ? "[E]" : null,
                 player.inventory[i].Name,
                 player.inventory[i].Atk == 0 ? null : "공격력 " + (Math.Sign(player.inventory[i].Atk) == 1 ? "+" : "-") + player.inventory[i].Atk,
@@ -184,7 +225,7 @@ internal class Program
             Console.Clear();
 
             DisplayItemList(SelectMenuNumber.Equip);
-            DisplayInventorySelectMenu(SelectMenuNumber.Equip);
+            DisplaySelectMenu(SelectMenuNumber.Equip);
 
             int input = CheckValidInput(0, player.inventory.Count());
             switch (input)
@@ -203,16 +244,12 @@ internal class Program
         char[] charArr = str.ToCharArray();
         foreach (char c in charArr)
         {
-
             if (char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.OtherLetter)
-            {
                 count++;
-            }
         }
-
         return count;
     }
-    public static void DisplayInventorySelectMenu(SelectMenuNumber select)
+    public static void DisplaySelectMenu(SelectMenuNumber select)
     {
         //0 인트로, 1 상태창, 2 인벤토리,  3 장착 관리, 4 아이템 정렬, -1 정렬에서 내림차순 오름차순 선택 
         if (select == SelectMenuNumber.Intro)
@@ -251,6 +288,11 @@ internal class Program
             Console.WriteLine("\n1. 오름차순");
             Console.WriteLine("2. 내림차순");
         }
+        else if (select == SelectMenuNumber.Shop)
+        {
+            Console.WriteLine("1. 아이템 구매");
+            Console.WriteLine("2. 아이템 판매");
+        }
         Console.WriteLine("0. 나가기\n");
         Console.WriteLine("원하시는 행동을 입력해주세요.");
     }
@@ -261,18 +303,15 @@ internal class Program
             Console.Clear();
 
             DisplayItemList(select);
-            DisplayInventorySelectMenu(select);
+            DisplaySelectMenu(select);
 
             int input = CheckValidInput(0, 4);
-
-            
-
             switch (input)
             {
                 case 0:
                     return;
                 default:
-                    DisplayInventorySelectMenu(SelectMenuNumber.ASCorDESC);
+                    DisplaySelectMenu(SelectMenuNumber.ASCorDESC);
                     int arrSelect = CheckValidInput(0, 2);
                     orderByType(input, arrSelect);
                     break;
@@ -320,6 +359,101 @@ internal class Program
             else return;
         }
 
+    }
+    public static void DisplayShop(int[] itemArr)
+    {
+        while (true)
+        {
+            DisplayShopList(SelectMenuNumber.Shop, itemArr);
+            DisplaySelectMenu(SelectMenuNumber.Shop);
+            int input = CheckValidInput(0, 2);
+            switch (input)
+            {
+                case 0:
+                    return;
+                case 1:
+                    DisplayShopBuyItem(itemArr);
+                    break;
+                case 2:
+                    DisplayShopSaleItem();
+                    break;
+            }
+        }
+    }
+    public static void DisplayShopList(SelectMenuNumber isBuyIteom, int[] itemArr) 
+    {
+        int count = 0;
+        Console.Clear();
+
+        Console.WriteLine("상점{0}\n필요한 아이템을 얻을 수 있는 상점입니다.\n",
+            isBuyIteom == SelectMenuNumber.BuyItem ? " - 아이템 구매" :  null
+            );
+        Console.WriteLine("[보유 골드]");
+        Console.WriteLine($"Gold : {player.Gold} G\n");
+        Console.WriteLine("[아이템 목록]");
+        foreach (int i in itemArr)
+        {
+            int nameBlankLeft = 20;
+            int effectBlankLeft = 20;
+            int effectBlankRight;
+            int explanationBlank = 60;
+
+            nameBlankLeft -= isBuyIteom == SelectMenuNumber.BuyItem ? 2 : 0;
+            nameBlankLeft -= (storage[i].Name.Length + isCountHangul(storage[i].Name));
+
+            effectBlankLeft -= (storage[i].Atk == 0 ? (storage[i].Def == 0 ? ((int)Math.Log10(storage[i].Hp) + 10) : (int)Math.Log10(storage[i].Def) + 7) : (int)Math.Log10(storage[i].Atk) + 7);
+            effectBlankRight = (effectBlankLeft + 1) / 2;
+            effectBlankLeft = effectBlankLeft / 2;
+
+            explanationBlank -= (storage[i].Explanation.Length + isCountHangul(storage[i].Explanation));
+            count++;
+
+            Console.WriteLine("- " + "{0}{1}".PadRight(nameBlankLeft + 9) + "|".PadRight(effectBlankLeft + 1) + "{2}{3}{4}".PadRight(effectBlankRight + 9) + "| {5}".PadRight(explanationBlank + 4) + "| {6}",
+                isBuyIteom == SelectMenuNumber.BuyItem ? count + " " : null,
+                storage[i].Name,
+                storage[i].Atk == 0 ? null : "공격력 " + (Math.Sign(storage[i].Atk) == 1 ? "+" : "-") + storage[i].Atk,
+                storage[i].Def == 0 ? null : "방어력 " + (Math.Sign(storage[i].Def) == 1 ? "+" : "-") + storage[i].Def,
+                storage[i].Hp == 0 ? null : "체력 회복 " + (Math.Sign(storage[i].Hp) == 1 ? "+" : "-") + storage[i].Hp,
+                storage[i].Explanation,
+                player.inventory.Contains(storage[i]) ? "구매완료" : (storage[i].Price + "G")
+                );
+        }
+        Console.WriteLine();
+    }
+    public static void DisplayShopBuyItem(int[] itemArr)
+    {
+        while (true)
+        {
+            
+            DisplayShopList(SelectMenuNumber.BuyItem, itemArr);
+            DisplaySelectMenu(SelectMenuNumber.BuyItem);
+            int input = CheckValidInput(0, itemArr.Length);
+            switch (input)
+            {
+                case 0:
+                    return;
+                default:
+                    player.BuyItem(storage[itemArr[input - 1]]);
+                    break;
+            }
+        }
+    }
+    public static void DisplayShopSaleItem()
+    {
+        while (true)
+        {
+            DisplayItemList(SelectMenuNumber.SaleItem);
+            DisplaySelectMenu(SelectMenuNumber.SaleItem);
+            int input = CheckValidInput(0, player.inventory.Count);
+            switch (input)
+            {
+                case 0:
+                    return;
+                default:
+                    player.SaleItem(input-1);
+                    break;
+            }
+        }
     }
 }
 
@@ -384,6 +518,39 @@ public class Character
     {
         inventory.Add(pickUpItem);
     }
+    public void BuyItem(Item buyItem)
+    {
+        if(Gold >= buyItem.Price)
+        {
+            Gold -= buyItem.Price;
+            inventory.Add(buyItem);
+        }
+        else if (inventory.Contains(buyItem))
+        {
+            Console.WriteLine("\n이미 구매한 아이템입니다.");
+            Thread.Sleep(500);
+        }
+        else 
+        {
+            Console.WriteLine("\nGold가 부족합니다.");
+            Thread.Sleep(500);
+        }
+    }
+    public void SaleItem(int ItemIndex)
+    {
+        float salePrice = inventory[ItemIndex].Price * 0.85f;
+        Gold += (int)salePrice;
+        if(inventory[ItemIndex].Using == true)
+        {
+            addAtk -= inventory[ItemIndex].Atk;
+            addDef -= inventory[ItemIndex].Def;
+            Atk -= inventory[ItemIndex].Atk;
+            Def -= inventory[ItemIndex].Def;
+            inventory[ItemIndex].Using = false;
+            inventory[ItemIndex].UsingCount = 0;
+        }
+        inventory.Remove(inventory[ItemIndex]);
+    }
 }
 public enum ItemType
 {
@@ -411,6 +578,7 @@ public interface Item
     string Explanation { get; }
     int UsingCount { get; set; }
     bool Using { get; set; }
+    int Price { get; }
 }
 class Weapon : Item
 {
@@ -422,7 +590,8 @@ class Weapon : Item
     public string Explanation { get; set; }
     public int UsingCount { get; set; }
     public bool Using { get; set; }
-    public Weapon(ItemType type, string name, int atk, int def, int hp, string explanation)
+    public int Price { get; }
+    public Weapon(ItemType type, string name, int atk, int def, int hp, string explanation, int price)
     {
         Type = type;
         Name = name;
@@ -430,22 +599,25 @@ class Weapon : Item
         Def = def;
         Hp = hp;
         Explanation = explanation;
+        Price = price;
     }
-    public Weapon(ItemType type, string name, int atk, int def, string explanation)
+    public Weapon(ItemType type, string name, int atk, int def, string explanation, int price)
     {
         Type = type;
         Name = name;
         Atk = atk;
         Def = def;
         Explanation = explanation;
+        Price = price;
     }
-    public Weapon(ItemType type, string name, int atk, string explanation)
+    public Weapon(ItemType type, string name, int atk, string explanation, int price)
     {
         Type = type;
         Name = name;
         Atk = atk;
         Def = 0;
         Explanation = explanation;
+        Price = price;
     }
 }
 class Armor : Item
@@ -458,8 +630,8 @@ class Armor : Item
     public string Explanation { get; set; }
     public int UsingCount { get; set; }
     public bool Using { get; set; }
-
-    public Armor(ItemType type, string name, int atk, int def, int hp, string explanation)
+    public int Price { get; }
+    public Armor(ItemType type, string name, int atk, int def, int hp, string explanation, int price)
     {
         Type = type;
         Name = name;
@@ -467,21 +639,24 @@ class Armor : Item
         Def = def;
         Hp = hp;
         Explanation = explanation;
+        Price= price;
     }
-    public Armor(ItemType type, string name, int atk, int def, string explanation)
+    public Armor(ItemType type, string name, int atk, int def, string explanation, int price)
     {
         Type = type;
         Name = name;
         Atk = atk;
         Def = def;
         Explanation = explanation;
+        Price = price;
     }
-    public Armor(ItemType type, string name, int def, string explanation)
+    public Armor(ItemType type, string name, int def, string explanation, int price)
     {
         Type = type;
         Name = name;
         Def = def;
         Explanation = explanation;
+        Price = price;
     }
 }
 class Potion : Item
@@ -494,8 +669,8 @@ class Potion : Item
     public string Explanation { get; set; }
     public int UsingCount { get; set; }
     public bool Using { get; set; }
-
-    public Potion(ItemType type, string name, int atk, int def, int hp, string explanation)
+    public int Price { get; }
+    public Potion(ItemType type, string name, int atk, int def, int hp, string explanation, int price)
     {
         Type = type;
         Name = name;
@@ -503,16 +678,18 @@ class Potion : Item
         Def = def;
         Hp = hp;
         Explanation = explanation;
+        Price = price;
     }
-    public Potion(ItemType type, string name, int atk, int def, string explanation)
+    public Potion(ItemType type, string name, int atk, int def, string explanation, int price)
     {
         Type = type;
         Name = name;
         Atk = atk;
         Def = def;
         Explanation = explanation;
+        Price = price;
     }
-    public Potion(ItemType type, string name, int hp, string explanation)
+    public Potion(ItemType type, string name, int hp, string explanation, int price)
     {
         Type = type;
         Name = name;
@@ -520,8 +697,9 @@ class Potion : Item
         Def = 0;
         Hp = hp;
         Explanation = explanation;
+        Price = price;
     }
-    public Potion(ItemType type, int atk, string name, string explanation)
+    public Potion(ItemType type, int atk, string name, string explanation, int price)
     {
         Type = type;
         Name = name;
@@ -529,8 +707,9 @@ class Potion : Item
         Def = 0;
         Hp = 0;
         Explanation = explanation;
+        Price = price;
     }
-    public Potion(ItemType type, string name, string explanation, int def)
+    public Potion(ItemType type, string name, string explanation, int def, int price)
     {
         Type = type;
         Name = name;
@@ -538,5 +717,6 @@ class Potion : Item
         Def = def;
         Hp = 0;
         Explanation = explanation;
+        Price = price;
     }
 }
