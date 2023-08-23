@@ -13,7 +13,16 @@ internal class Program
         workGlovesr,
         jeans
     }
-
+    //0 인트로, 1 상태창, 2 인벤토리,  3 장착 관리, 4 아이템 정렬, -1 정렬에서 내림차순 오름차순 선택
+    public enum SelectMenuNumber
+    {
+        ASCorDESC = -1,
+        Intro = 0,
+        Status,
+        Inventory,
+        Equip,
+        Arrange
+    }
     static void Main(string[] args)
     {
         GameDataSetting();
@@ -50,12 +59,7 @@ internal class Program
 
             Console.WriteLine("스파르타 마을에 오신 여러분 환영합니다.");
             Console.WriteLine("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.");
-            Console.WriteLine();
-            Console.WriteLine("1. 상태보기");
-            Console.WriteLine("2. 인벤토리");
-            Console.WriteLine("0. 게임종료");
-            Console.WriteLine();
-            Console.WriteLine("원하시는 행동을 입력해주세요.");
+            DisplayInventorySelectMenu(SelectMenuNumber.Intro);
 
             int input = CheckValidInput(0, 2);
             switch (input)
@@ -80,19 +84,7 @@ internal class Program
 
         Console.WriteLine("상태보기");
         Console.WriteLine("캐릭터의 정보르 표시합니다.");
-        Console.WriteLine();
-        Console.WriteLine($"Lv.{player.Level}");
-        Console.WriteLine($"{player.Name}({player.Job})");
-        Console.WriteLine($"공격력 : {player.Atk} " +
-            "{0}",player.addAtk == 0 ? null : ("("+(Math.Sign(player.addAtk) == 1 ? "+" : "-") + player.addAtk+")")
-            );
-        Console.WriteLine($"방어력 : {player.Def} " +
-            "{0}", player.addDef == 0 ? null : ("(" + (Math.Sign(player.addDef) == 1 ? "+" : "-") + player.addDef + ")")
-            );
-        Console.WriteLine($"체력 : {player.Hp}");
-        Console.WriteLine($"Gold : {player.Gold} G");
-        Console.WriteLine();
-        Console.WriteLine("0. 나가기");
+        DisplayInventorySelectMenu(SelectMenuNumber.Status);
 
         int input = CheckValidInput(0, 0);
         switch (input)
@@ -108,8 +100,8 @@ internal class Program
         {
             Console.Clear();
 
-            DisplayItemList(0);
-            DisplayInventorySelectMenu(0);
+            DisplayItemList(SelectMenuNumber.Inventory);
+            DisplayInventorySelectMenu(SelectMenuNumber.Inventory);
 
             int input = CheckValidInput(0, 2);
             switch (input)
@@ -120,7 +112,7 @@ internal class Program
                     DisplayItemUsing();
                     break;
                 case 2:
-                    DisplayInventoryArrange(input);
+                    DisplayInventoryArrange(SelectMenuNumber.Arrange);
                     break;
             }
         }
@@ -147,13 +139,13 @@ internal class Program
             Console.WriteLine("잘못된 입력입니다.");
         }
     }
-    static void DisplayItemList(int select)
+    static void DisplayItemList(SelectMenuNumber select)
     {
         string selectedMenu = "";
 
-        if(select == 1)
+        if(select == SelectMenuNumber.Equip)
             selectedMenu = " - 장착 관리";
-        else if(select == 2)
+        else if(select == SelectMenuNumber.Arrange)
             selectedMenu = " - 아이템 정렬";
 
         Console.WriteLine("인벤토리{0}", selectedMenu);
@@ -165,7 +157,7 @@ internal class Program
             int effectBlankLeft = 20;
             int effectBlankRight;
 
-            nameBlankLeft -= select == 1 ? 2 : 0;
+            nameBlankLeft -= select == SelectMenuNumber.Equip ? 2 : 0;
             nameBlankLeft -= player.inventory[i].Using == true ? 3 : 0;
             nameBlankLeft -= (player.inventory[i].Name.Length + isCountHangul(player.inventory[i].Name));
 
@@ -174,7 +166,7 @@ internal class Program
             effectBlankLeft = effectBlankLeft / 2;
 
             Console.WriteLine("- "+ "{0}{1}{2}".PadRight(nameBlankLeft + 9) + "|".PadRight(effectBlankLeft+1) + "{3}{4}{5}".PadRight(effectBlankRight+9) + "| {6}",
-                select == 1 ? i + 1 + " " : null,
+                select == SelectMenuNumber.Equip ? i + 1 + " " : null,
                 player.inventory[i].Using == true ? "[E]" : null,
                 player.inventory[i].Name,
                 player.inventory[i].Atk == 0 ? null : "공격력 " + (Math.Sign(player.inventory[i].Atk) == 1 ? "+" : "-") + player.inventory[i].Atk,
@@ -191,8 +183,8 @@ internal class Program
         {
             Console.Clear();
 
-            DisplayItemList(1);
-            DisplayInventorySelectMenu(1);
+            DisplayItemList(SelectMenuNumber.Equip);
+            DisplayInventorySelectMenu(SelectMenuNumber.Equip);
 
             int input = CheckValidInput(0, player.inventory.Count());
             switch (input)
@@ -220,22 +212,41 @@ internal class Program
 
         return count;
     }
-    public static void DisplayInventorySelectMenu(int select)
+    public static void DisplayInventorySelectMenu(SelectMenuNumber select)
     {
-        //0 기본 , 1 장착 관리, 2 아이템 정렬, -1 정렬에서 내림차순 오름차순 선택 
-        if(select == 0)
+        //0 인트로, 1 상태창, 2 인벤토리,  3 장착 관리, 4 아이템 정렬, -1 정렬에서 내림차순 오름차순 선택 
+        if (select == SelectMenuNumber.Intro)
+        {
+            Console.WriteLine("\n1. 상태보기");
+            Console.WriteLine("2. 인벤토리");
+            Console.WriteLine("3. 상점");
+        }
+        else if (select == SelectMenuNumber.Status)
+        {
+            Console.WriteLine($"\nLv.{player.Level}");
+            Console.WriteLine($"{player.Name}({player.Job})");
+            Console.WriteLine($"공격력 : {player.Atk} " +
+                "{0}", player.addAtk == 0 ? null : ("(" + (Math.Sign(player.addAtk) == 1 ? "+" : "-") + player.addAtk + ")")
+                );
+            Console.WriteLine($"방어력 : {player.Def} " +
+                "{0}", player.addDef == 0 ? null : ("(" + (Math.Sign(player.addDef) == 1 ? "+" : "-") + player.addDef + ")")
+                );
+            Console.WriteLine($"체력 : {player.Hp}");
+            Console.WriteLine($"Gold : {player.Gold} G\n");
+        }
+        else if(select == SelectMenuNumber.Inventory)
         {
             Console.WriteLine("1. 장착 관리");
             Console.WriteLine("2. 아이템 정렬");
         }
-        else if (select == 2)
+        else if (select == SelectMenuNumber.Arrange)
         {
             Console.WriteLine("1. 이름");
             Console.WriteLine("2. 장착순");
             Console.WriteLine("3. 공격력");
             Console.WriteLine("4. 방어력");
         }
-        else if(select == -1)
+        else if(select == SelectMenuNumber.ASCorDESC)
         {
             Console.WriteLine("\n1. 오름차순");
             Console.WriteLine("2. 내림차순");
@@ -243,7 +254,7 @@ internal class Program
         Console.WriteLine("0. 나가기\n");
         Console.WriteLine("원하시는 행동을 입력해주세요.");
     }
-    public static void DisplayInventoryArrange(int select)
+    public static void DisplayInventoryArrange(SelectMenuNumber select)
     {
         while (true)
         {
@@ -261,7 +272,7 @@ internal class Program
                 case 0:
                     return;
                 default:
-                    DisplayInventorySelectMenu(-1);
+                    DisplayInventorySelectMenu(SelectMenuNumber.ASCorDESC);
                     int arrSelect = CheckValidInput(0, 2);
                     orderByType(input, arrSelect);
                     break;
